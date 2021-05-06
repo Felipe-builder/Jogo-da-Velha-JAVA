@@ -5,12 +5,14 @@ import java.util.Scanner;
 public class JogoDaVelha {
 
     private static String[][] matriz;
+    private static int turn;
     private Jogador[] jogadores; // apenas dois jogadores por jogo
 
     //bloco de inicialização
     static {
         matriz = new String[3][3];
         construirMatriz();
+        JogoDaVelha.turn = 1;
     }
 
     Scanner k = new Scanner(System.in);
@@ -61,51 +63,75 @@ public class JogoDaVelha {
     /**
      * Este metodo serve para definir qual jogador é o dono da vez, atribuindo ao valor de retorno o jogador
      * detentor da vez.
-     * @param turno valor int que serve como base para definir qual dos jogadores será retornado. impar retorna
-     *              o jogador[0], par jogador[1]
      * @return deve trazer um dos objetos dentro do array de objetos  'Jogador[] jogadores' que servirá na funcao
      * Escolha posicao;
      */
-    public Jogador viradaDeTurno(int turno){
-        if (turno % 2 != 0) {
+    public Jogador viradaDeTurno(){
+        if (JogoDaVelha.turn % 2 != 0) {
             return jogadores[0];
-        } else {
-            return jogadores[1];
         }
-
+        return jogadores[1];
     }
 
     /**
-     *
-     * @param jogador é o parametro do objeto Jogador
+     * Este método busca primeiramente colher o dado da jogada escolhida e valida-lo posteriormente para então
+     * definitivamente poder escrever (jogar) a posição então escolhida.
+     * @param jogador é o parametro do objeto Jogador que detém a vez de jogar
      */
     public void escolhaPosicao(Jogador jogador) {
-        boolean prossegue;
-        do {
-            System.out.printf("%s Vai jogar %s em que posição? ", jogador.getNome(), jogador.getSimbolo());
-            int posicao = k.nextInt();
-            prossegue = jogando(posicao, jogador.getSimbolo());
-            if (!prossegue) System.out.println("Jogada inválida! ");
-        } while (!prossegue);
+        String posicaoEscolhida = colherDadoDaJogada(jogador);
+        jogando(posicaoEscolhida, jogador.getSimbolo());
+        JogoDaVelha.turn++;
     }
 
-    public boolean jogando(int posicao, String simbolo) {
+    /**
+     *  Este método será acionado após a coleta do dado de escolha de posicao do método 'escolhaPosicao' e substituir o
+     *  valor númerico dentro do Array de String por um caracter 'X' ou 'O'.
+     * @param posicao é o dado coletado para escrever o simbolo em seu lugar.
+     * @param simbolo é o caracter 'X' ou 'O' do jogador da vez.
+     */
+    private void jogando(String posicao, String simbolo) {
         for (int i = 0; i < matriz.length; i++) {
             for (int j = 0; j < matriz[i].length; j++) {
-                if (matriz[i][j].equals(String.valueOf(posicao))) {
+                if (matriz[i][j].equals(posicao)) {
                     matriz[i][j] = simbolo;
-                    return true;
                 }
             }
         }
-        return false;
     }
 
-    // Metodos de finalização
+    private String colherDadoDaJogada(Jogador jogador) {
+        boolean erro = false;
+        String posicaoEscolhida;
+        do {
+            if (erro) System.out.println("ERRO! Digite novamente: ");
+            else
+            System.out.printf("%s Vai jogar %s em que posição? ", jogador.getNome(), jogador.getSimbolo());
+            posicaoEscolhida = k.next();
+            erro = verificarErro(posicaoEscolhida);
+        } while (erro);
+        return posicaoEscolhida;
+    }
+
+    private boolean verificarErro(String posicaoEscolhida) {
+        if (posicaoEscolhida.matches("\\d+") && (Integer.parseInt(posicaoEscolhida) <= 9 ||
+                Integer.parseInt(posicaoEscolhida) >= 1)) {
+            for (String[] strings : matriz) {
+                for (String string : strings) {
+                    if (string.equals(posicaoEscolhida)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    // Metodos de condicionamento para finalização
 
     public boolean condicoesFinalizarJogo(Jogador jogador) {
         boolean isAcabou;
-        isAcabou = condicoesColunas() || condicoesLinhas() || condicoesDiagonais();
+        isAcabou = condicoesColunasELinhas() || condicoesDiagonais();
         //atribuir ponto ao jogador vencedor caso (isAcabou == true)
         if (isAcabou) {
             System.out.println("Acabou!");
@@ -115,18 +141,12 @@ public class JogoDaVelha {
         return empate();
     }
 
-    private boolean condicoesColunas() {
+    private boolean condicoesColunasELinhas() {
         for (int i = 0; i < matriz.length; i++) {
             if (matriz[0][i].equals(matriz[1][i]) && matriz[0][i].equals(matriz[2][i])) {
                 return true;
             }
-        }
-        return false;
-    }
-
-    private boolean condicoesLinhas() {
-        for (String[] strings : matriz) {
-            if (strings[0].equals(strings[1]) && strings[0].equals(strings[2])) {
+            if (matriz[i][0].equals(matriz[i][1]) && matriz[i][0].equals(matriz[i][2])) {
                 return true;
             }
         }
@@ -151,6 +171,8 @@ public class JogoDaVelha {
         }
         return jogadasDisponiveis == 0;
     }
+
+    // métodos após finalização do Jogo
 
     public void fimDeJogo(Jogador vencedor) {
         System.out.println("--FIM DE JOGO--");

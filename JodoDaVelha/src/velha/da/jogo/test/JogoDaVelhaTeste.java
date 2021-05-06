@@ -13,12 +13,10 @@ public class JogoDaVelhaTeste {
 
         func.printJogadores();
 
-        int turno = 0;
-        Jogador jogador;
+        Jogador jogador; // esta é a variável do jogador que detém a vez
         do {
-            turno++;
             func.mostrarTabuleiro();
-            jogador = func.viradaDeTurno(turno);
+            jogador = func.viradaDeTurno();
             func.escolhaPosicao(jogador);
         } while (!func.condicoesFinalizarJogo(jogador));
         func.mostrarTabuleiro();
